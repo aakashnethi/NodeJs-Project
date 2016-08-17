@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Class Test April 2016</title>
+
+    <!-- Bootstrap -->
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+	<script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+		.form-signin input[type="email"] {
+  			margin-bottom: -1px;
+  			border-bottom-right-radius: 0;
+  			border-bottom-left-radius: 0;
+		}
+		.form-signin input[type="password"] {
+		 	margin-bottom: 10px;
+		  	border-top-left-radius: 0;
+		  	border-top-right-radius: 0;
+		}
+		.right {
+			text-align: right;
+		}
+        .center {
+            text-align: center;   
+            color: red;
+        }
+		#contentArea{
+			padding-top: 80px;
+		}
+    </style>
+    <script type="text/javascript">
+
+    $( document ).ready(function() {
+        if(localStorage.getItem("username")){
+            getAllProducts();
+        } else {
+            $('#contentArea').hide();
+        }
+    });
+
+    function getAllProducts(){
+        $('#contentArea').show();
+        $('#userSignIn').html('<p class="navbar-text">Logged in as '+localStorage.getItem("username")+' </p> <button type="button" class="btn btn-primary navbar-btn" id="sign_out">Sign out</button>');
+    	$.get("/allProducts", function(data) {
+    		console.log(data);
+            if(data.allProducts.length != 0){
+                var html = '<table class="table table-bordered table-striped"><tr><th>Product Name</th><th>Product Price</th><th>Product Description</th></tr>';
+                    for(var i=0;i<data.allProducts.length;i++){
+                        html += '<tr><td>'+data.allProducts[i].productname+'</td><td>'+data.allProducts[i].price+'</td><td>'+data.allProducts[i].description+'</td></tr>';
+                    }
+                    html += '</table>';
+                    $("#allProducts" ).html( html );
+                    $("#addProductForm")[0].reset();
+            }
+    	// 	var html = "<ul>";
+
+    	// 	for(var i = 0;i<data.allusers.length;i++){
+    	// 		html +="<li>"+data.allusers[i].firstname+", "+data.allusers[i].lastname+" ("+data.allusers[i].username+")</li>";
+    	// 	}
+    	// 	 html += "</ul>";
+  			// $("#allUsers" ).html( html );
+		});
+    }
+
+    $(function() {
+        $('#sign_out').click(function(event) {
+            localStorage.removeItem("username");
+            location.reload();
+        });
+    });
+
+    $(function() {
+        $('#addProductForm').submit(function(event) {
+            event.preventDefault(); 
+            var data = {productname:$("#productName").val(),productprice:$("#productPrice").val(),productdesc:$("#productDesc").val()}
+            $.post('/addProduct', data, function(resp) {
+                if(typeof resp.error != "undefined"){
+                    alert(resp.error);
+                } else {
+                    getAllProducts();
+                }
+            });
+        });
+    });
+
+    $(function() {
+	    $('#loginform').submit(function(event) {
+	        event.preventDefault(); 
+	        var data = {username:$("#inputEmail").val(),password:$("#inputPassword").val()}
+	        $.post('/login', data, function(resp) {
+	            if(typeof resp.error != "undefined"){
+	            	alert(resp.error);
+	            } else {
+	            	//login Successful
+                    localStorage.setItem("username", $("#inputEmail").val());
+	            	$('#signin').modal('hide');
+	            	getAllProducts();
+	            }
+	        });
+	    });
+	});
+
+	$(function() {
+	    $('#registerform').submit(function(event) {
+	        event.preventDefault(); 
+	        var data = {username:$("#email").val(),password:$("#password").val(), lastname:$("#last_name").val(),firstname:$("#first_name").val()}
+	        $.post('/register', data, function(resp) {
+	        	console.log(resp);
+	            if(typeof resp.error != "undefined"){
+	            	alert(resp.error);
+	            } else {
+	            	//login Successful
+                    localStorage.setItem("username", $("#email").val());
+	            	$('#register').modal('hide');
+	            	getAllProducts();
+	            }
+	        });
+	    });
+	});
+    </script>
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+    	<div class="container">
+			<div class="navbar-header">
+				<a href="" class="navbar-brand">My WebSite</a>
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+          </button>
+			</div>
+			<div class="collapse navbar-collapse navbar-right" id="userSignIn">
+				<button type="button" class="btn btn-primary navbar-btn" data-toggle="modal" data-target="#signin">Sign in</button>
+				<button type="button" class="btn btn-primary navbar-btn" data-toggle="modal" data-target="#register">Register</button>
+			</div>
+		</div>
+
+    </div>
+    <div class="container" id="contentArea">
+    	<!-- <div id="allUsers"></div> -->
+        <div id="allProducts"><h3 class="center">No Products Available to Display</h3></div>
+        <div id="addProduct">
+            <h1>Add a Product</h1>
+            <form id="addProductForm">
+              <div class="form-group">
+                <label for="productName">Product Name</label>
+                <input type="text" class="form-control" id="productName" placeholder="Product Name" required autofocus>
+              </div>
+              <div class="form-group">
+                <label for="productprice">Product Price</label>
+                <input type="text" class="form-control" id="productPrice" placeholder="Product Price" required>
+              </div>
+              <div class="form-group">
+                <label for="productDesc">Product Description</label>
+                <textarea class="form-control" id="productDesc" rows="3" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-default">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registration -->
+    <div class="modal fade" tabindex="-1" role="dialog" id="register">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title">Register</h4>
+	      </div>
+	      <div class="modal-body">
+	        <form id="registerform">
+    			<div class="row">
+    				<div class="col-xs-6 col-sm-6 col-md-6">
+    					<div class="form-group">
+                <input type="text" name="first_name" id="first_name" class="form-control input-sm" placeholder="First Name" required autofocus>
+    					</div>
+    				</div>
+    				<div class="col-xs-6 col-sm-6 col-md-6">
+    					<div class="form-group">
+    						<input type="text" name="last_name" id="last_name" class="form-control input-sm" placeholder="Last Name" required>
+    					</div>
+    				</div>
+    			</div>
+
+    			<div class="form-group">
+    				<input type="email" name="email" id="email" class="form-control input-sm" placeholder="Email Address" required>
+    			</div>
+
+    			<div class="row">
+    				<div class="col-xs-6 col-sm-6 col-md-6">
+    					<div class="form-group">
+    						<input type="password" name="password" id="password" class="form-control input-sm" placeholder="Password" required>
+    					</div>
+    				</div>
+    				<div class="col-xs-6 col-sm-6 col-md-6">
+    					<div class="form-group">
+    						<input type="password" name="password_confirmation" id="password_confirmation" class="form-control input-sm" placeholder="Confirm Password" required>
+    					</div>
+    				</div>
+    			</div>
+    			
+    			<div class="right">
+        			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        			<button class="btn btn-primary" type="submit">Register</button>
+        		</div>
+    		
+    		</form>
+	      </div>
+	      
+	    </div><!-- /.modal-content -->
+	  </div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+	<!-- Registration -->
+
+	<!-- Login -->
+    <div class="modal fade" tabindex="-1" role="dialog" id="signin">
+	  <div class="modal-dialog modal-sm">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title">Sign in</h4>
+	      </div>
+	      <div class="modal-body">
+	        <form class="form-signin" id="loginform">
+        		<label for="inputEmail" class="sr-only">Email address</label>
+        		<input type="email" id="inputEmail" name="username" class="form-control" placeholder="Email address" required autofocus>
+        		<label for="inputPassword" class="sr-only">Password</label>
+        		<input type="password" id="inputPassword" name="password" class="form-control" placeholder="Password" required>
+        		<div class="checkbox">
+          			<label>
+            			<input type="checkbox" value="remember-me"> Remember me
+          			</label>
+        		</div>
+        		<div class="right">
+        			<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        			<button class="btn btn-primary" type="submit">Sign in</button>
+        		</div>
+      		</form>
+	      </div>
+	    </div><!-- /.modal-content -->
+	  </div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+	<!-- Login -->
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  </body>
+</html>
